@@ -1,0 +1,39 @@
+﻿@page "/AddWatch"
+@using AERestAPI.Model
+@using ApiClient
+
+@inject HttpClient Http
+@inject NavigationManager nav
+
+<h3>Create a New Watch</h3>
+@if (watchEditModel == null) {
+    <p><em>Loading...</em></p>
+} else {
+    <div class="row">
+        <EditForm Model="@watchEditModel" OnValidSubmit="@InsertWatch">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                Name: <InputText id="Name" name="Name" @bind-Value="watchEditModel.Name" class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Submit</button>
+        </EditForm>
+    </div>
+}
+@code {
+    private WatchEditModel watchEditModel;
+
+    private async Task InsertWatch() {
+        WatchDTO record = new WatchDTO();
+        watchEditModel = new WatchEditModel();
+        record.Name = watchEditModel.Name;
+        record.Key = watchEditModel.Key;
+
+        if (await (new ActionEqualsApiRequest<WatchDTO>(Http, "Watches").Insert(record))) {
+            nav.NavigateTo("Watches");
+        }
+
+    }
+}

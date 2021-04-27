@@ -1,0 +1,72 @@
+﻿@page "/witches"
+@using ApiClient
+@inject HttpClient Http
+@inject IJSRuntime js
+@inject NavigationManager NavigationManager
+
+<h1>Witches</h1>
+@if (aWitches == null) {
+    <p><em>Loading...</em></p>
+} else {
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Currently Watching</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var witch in aPopulated) {
+                <tr>
+                    <td>@witch.Witch.Name</td>
+                    <td>@witch.WatchName</td>
+                    <td><a href="/EditWitch/@witch.Witch.Key" class="btn btn-info">Edit</a></td>
+                    <td><a @onclick="(() => DeleteWitch(witch.Witch.Key))" class="btn btn-danger">Delete</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a href="/AddWitch">Add a Witch..</a>
+}
+
+@code {
+    public class WrappedWitch {
+        public WitchDTO Witch { get; set; }
+        public string WatchName { get; set; }
+    }
+    List<WrappedWitch> aPopulated = new List<WrappedWitch>();
+    
+
+    public WitchDTO[] aWitches;
+    protected override async Task OnInitializedAsync() {
+        aWitches = await (new ActionEqualsApiRequest<WitchDTO>(Http, "Witches").GetAllAsync());
+        aPopulated = new List<WrappedWitch>();
+        foreach (var witch in aWitches) {
+            
+            WrappedWitch ww = new WrappedWitch();
+            ww.Witch = witch;
+            var watchName = GetWatchName(witch.watching);
+            ww.WatchName = await watchName;
+            aPopulated.Add(ww);
+        }
+    }
+
+    async Task<string> GetWatchName(string key) {
+        if (string.IsNullOrEmpty(key)) { return "Nothing"; }
+        if (key.Contains("(Missing Data)")) { return "Nothing";  }
+        var response = await new ActionEqualsApiRequest<WatchDTO>(Http, "Watches").GetByKey(key);
+        var watchName = response.Name;
+        return (watchName);
+    }
+
+    public async Task DeleteWitch(string key) {
+        
+        bool confirm = await js.InvokeAsync<bool>("confirm", "Do you want to delete this Witch?");
+        if (confirm) {
+            await (new ActionEqualsApiRequest<WitchDTO>(Http, "Witches").Delete(key));
+        }
+        StateHasChanged();
+        NavigationManager.NavigateTo("Witches", true);
+    }
+}
+

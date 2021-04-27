@@ -1,0 +1,79 @@
+﻿@page "/EditWitch/{key}"
+@using Model
+@using ApiClient
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<h3>Edit Witch</h3>
+
+@if (witchEditModel == null) {
+    <p><em>Loading...</em></p>
+} else {
+<div class="row">
+    <EditForm Model="@witchEditModel" OnValidSubmit="@UpdateWitch">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            Name: <InputText id="name" @bind-Value="witchEditModel.Name" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Which Watch is this Witch Watching?
+            <select name="watching" @bind="witchEditModel.watching">
+                <option value="">None</option>
+                @foreach (var oWatch in witchEditModel.AvailableWatches) {
+                    if (witchEditModel.watching == oWatch.Key) {
+                        <option value="@oWatch.Key" selected>@oWatch.Name</option>
+                    } else {
+                        <option value="@oWatch.Key">@oWatch.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <br />
+
+        <button type="submit" class="btn btn-success">Update</button>
+    </EditForm>
+
+</div>
+
+<br />
+<br />
+<a href="/witches">Back to List</a>
+}
+
+@code {
+    [Parameter]
+    public string key { get; set; }
+
+    private WitchEditModel witchEditModel;
+    private WitchDTO oWitch;
+
+    protected override async Task OnInitializedAsync() {
+        if (key == null) {
+            NavigationManager.NavigateTo("Witches");
+        }
+
+        oWitch = await (new ActionEqualsApiRequest<WitchDTO>(Http, "Witches").GetByKey(key));
+        witchEditModel = new WitchEditModel();
+        witchEditModel.Key = key;
+        witchEditModel.Name = oWitch.Name;
+        witchEditModel.watching = oWitch.watching;
+
+        var aWatches = await (new ActionEqualsApiRequest<WatchEditModel>(Http, "Watches").GetAllAsync());
+        witchEditModel.AvailableWatches = aWatches.ToList();
+
+    }
+
+    private async Task UpdateWitch() {
+
+        WitchEditModel witch = new WitchEditModel {
+            Name = witchEditModel.Name,
+            Key = key,
+            watching = witchEditModel.watching
+        };
+        await new ActionEqualsApiRequest<WitchEditModel>(Http, "Witches").Update(witch.Key, witch);
+        NavigationManager.NavigateTo("Witches");
+    }
+}

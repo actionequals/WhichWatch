@@ -1,0 +1,59 @@
+﻿@page "/EditWatch/{key}"
+@using Model
+@using ApiClient
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<h3>Edit Watch</h3>
+
+@if (WatchEditModel == null) {
+    <p><em>Loading...</em></p>
+} else {
+    <div class="row">
+        <EditForm Model="@WatchEditModel" OnValidSubmit="@UpdateWatch">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                Name: <InputText id="name" @bind-Value="WatchEditModel.Name" class="form-control" />
+            </div>
+
+            <br />
+
+            <button type="submit" class="btn btn-success">Update</button>
+        </EditForm>
+
+    </div>
+
+    <br />
+    <br />
+    <a href="/watches">Back to List</a>
+}
+
+    @code {
+        [Parameter]
+        public string key { get; set; }
+
+        private WatchEditModel WatchEditModel = new WatchEditModel();
+        private WatchDTO oWatch;
+
+        protected override async Task OnInitializedAsync() {
+            if (key == null) {
+                NavigationManager.NavigateTo("Watches");
+            }
+
+            oWatch = await (new ActionEqualsApiRequest<WatchDTO>(Http, "Watches").GetByKey(key));
+            WatchEditModel = new WatchEditModel();
+            WatchEditModel.Key = key;
+            WatchEditModel.Name = oWatch.Name;
+        }
+
+        private async Task UpdateWatch() {
+            WatchEditModel Watch = new WatchEditModel {
+                Name = WatchEditModel.Name,
+                Key = key
+            };
+            await new ActionEqualsApiRequest<WatchEditModel>(Http, "Watches").Update(Watch.Key, Watch);
+            NavigationManager.NavigateTo("Watches");
+        }
+    }
