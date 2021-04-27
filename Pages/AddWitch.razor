@@ -6,9 +6,6 @@
 @inject NavigationManager nav
 
 <h3>Create a New Witch</h3>
-@if (witchEditModel == null) {
-    <p><em>Loading...</em></p>
-} else {
     <div class="row">
         <EditForm Model="@witchEditModel" OnValidSubmit="@InsertWitch">
             <DataAnnotationsValidator />
@@ -33,7 +30,6 @@
             <button type="submit" class="btn btn-success">Submit</button>
         </EditForm>
     </div>
-}
 @code {
     private WitchEditModel witchEditModel;
 

@@ -6,9 +6,6 @@
 @inject NavigationManager nav
 
 <h3>Create a New Watch</h3>
-@if (watchEditModel == null) {
-    <p><em>Loading...</em></p>
-} else {
     <div class="row">
         <EditForm Model="@watchEditModel" OnValidSubmit="@InsertWatch">
             <DataAnnotationsValidator />
@@ -21,9 +18,8 @@
             <button type="submit" class="btn btn-success">Submit</button>
         </EditForm>
     </div>
-}
 @code {
-    private WatchEditModel watchEditModel;
+    private WatchEditModel watchEditModel = new WatchEditModel();;
 
     private async Task InsertWatch() {
         WatchDTO record = new WatchDTO();
